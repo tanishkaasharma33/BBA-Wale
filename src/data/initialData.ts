@@ -1,0 +1,278 @@
+import { StorageNode, StorageObject, ObjectReplica, DurabilityPolicy } from '../types/storage';
+import { generateChecksum } from '../utils/crypto';
+
+export const DURABILITY_POLICIES: DurabilityPolicy[] = [
+  {
+    id: 'STANDARD',
+    name: 'Standard Durability',
+    replicas: 2,
+    description: 'Sufficient for non-critical cached assets.',
+    faultTolerance: 'Survives 1 node loss',
+    storageOverhead: '2x raw storage',
+  },
+  {
+    id: 'HIGH_DURABILITY',
+    name: 'High Durability (Recommended)',
+    replicas: 3,
+    description: 'Gold standard distributed quorum protection across independent racks.',
+    faultTolerance: 'Survives 2 concurrent node failures',
+    storageOverhead: '3x raw storage',
+  },
+  {
+    id: 'MAX_DURABILITY',
+    name: 'Maximum Durability',
+    replicas: 4,
+    description: 'Mission-critical archives, financial ledgers, and zero-loss compliance workloads.',
+    faultTolerance: 'Survives 3 concurrent node failures',
+    storageOverhead: '4x raw storage',
+  },
+  {
+    id: 'CUSTOM',
+    name: 'Full Cluster Quorum',
+    replicas: 5,
+    description: 'Full mirror across all nodes in the cluster topology.',
+    faultTolerance: 'Survives 4 concurrent node failures',
+    storageOverhead: '5x raw storage',
+  },
+];
+
+export function getInitialNodes(): StorageNode[] {
+  const now = Date.now();
+  return [
+    {
+      id: 'node-1',
+      name: 'Node 01 (US-East)',
+      rack: 'rack-alpha',
+      ipAddress: '10.240.1.11',
+      status: 'HEALTHY',
+      totalCapacityGB: 100,
+      usedCapacityGB: 28.4,
+      availableCapacityGB: 71.6,
+      storedObjectIds: ['obj_001', 'obj_002', 'obj_004', 'obj_005'],
+      lastHeartbeat: now - 800,
+      networkConnectivity: 'CONNECTED',
+      replicaCount: 4,
+      activeIOPs: 142,
+    },
+    {
+      id: 'node-2',
+      name: 'Node 02 (US-East)',
+      rack: 'rack-alpha',
+      ipAddress: '10.240.1.12',
+      status: 'HEALTHY',
+      totalCapacityGB: 100,
+      usedCapacityGB: 22.1,
+      availableCapacityGB: 77.9,
+      storedObjectIds: ['obj_002', 'obj_003'],
+      lastHeartbeat: now - 1200,
+      networkConnectivity: 'CONNECTED',
+      replicaCount: 2,
+      activeIOPs: 98,
+    },
+    {
+      id: 'node-3',
+      name: 'Node 03 (US-Central)',
+      rack: 'rack-beta',
+      ipAddress: '10.240.2.21',
+      status: 'HEALTHY',
+      totalCapacityGB: 100,
+      usedCapacityGB: 34.8,
+      availableCapacityGB: 65.2,
+      storedObjectIds: ['obj_001', 'obj_003', 'obj_004', 'obj_005'],
+      lastHeartbeat: now - 400,
+      networkConnectivity: 'CONNECTED',
+      replicaCount: 4,
+      activeIOPs: 165,
+    },
+    {
+      id: 'node-4',
+      name: 'Node 04 (US-West)',
+      rack: 'rack-gamma',
+      ipAddress: '10.240.3.31',
+      status: 'HEALTHY',
+      totalCapacityGB: 100,
+      usedCapacityGB: 18.5,
+      availableCapacityGB: 81.5,
+      storedObjectIds: ['obj_001', 'obj_002', 'obj_005'],
+      lastHeartbeat: now - 950,
+      networkConnectivity: 'CONNECTED',
+      replicaCount: 3,
+      activeIOPs: 74,
+    },
+    {
+      id: 'node-5',
+      name: 'Node 05 (US-West)',
+      rack: 'rack-gamma',
+      ipAddress: '10.240.3.32',
+      status: 'HEALTHY',
+      totalCapacityGB: 100,
+      usedCapacityGB: 31.2,
+      availableCapacityGB: 68.8,
+      storedObjectIds: ['obj_003', 'obj_004'],
+      lastHeartbeat: now - 600,
+      networkConnectivity: 'CONNECTED',
+      replicaCount: 2,
+      activeIOPs: 110,
+    },
+  ];
+}
+
+export function getInitialObjects(): { objects: StorageObject[]; replicas: ObjectReplica[] } {
+  const now = Date.now();
+
+  const objects: StorageObject[] = [
+    {
+      objectId: 'obj_001',
+      fileName: 'presentation.pdf',
+      fileSizeMB: 24.5,
+      mimeType: 'application/pdf',
+      createdAt: now - 3600000 * 5,
+      updatedAt: now - 3600000 * 2,
+      version: 2,
+      versionsHistory: [
+        {
+          version: 1,
+          checksum: generateChecksum('presentation.pdf', 'v1'),
+          updatedAt: now - 3600000 * 5,
+          sizeMB: 22.0,
+          note: 'Initial deck uploaded by product team',
+        },
+        {
+          version: 2,
+          checksum: generateChecksum('presentation.pdf', 'v2'),
+          updatedAt: now - 3600000 * 2,
+          sizeMB: 24.5,
+          note: 'Added architecture benchmarks and failover diagrams',
+        },
+      ],
+      checksum: generateChecksum('presentation.pdf', 'v2'),
+      replicationFactor: 3,
+      replicaLocations: ['node-1', 'node-3', 'node-4'],
+      status: 'HEALTHY',
+      description: 'Distributed Storage Design Review Deck 2026',
+      contentPreview: '%PDF-1.7\n1 0 obj\n<< /Title (Vault Architecture: Fault Tolerant Object Storage) /Author (Systems Team) >>\nendobj',
+    },
+    {
+      objectId: 'obj_002',
+      fileName: 'company-video.mp4',
+      fileSizeMB: 248.0,
+      mimeType: 'video/mp4',
+      createdAt: now - 3600000 * 8,
+      updatedAt: now - 3600000 * 8,
+      version: 1,
+      versionsHistory: [
+        {
+          version: 1,
+          checksum: generateChecksum('company-video.mp4', 'v1'),
+          updatedAt: now - 3600000 * 8,
+          sizeMB: 248.0,
+          note: 'Production keynote stream recording',
+        },
+      ],
+      checksum: generateChecksum('company-video.mp4', 'v1'),
+      replicationFactor: 3,
+      replicaLocations: ['node-1', 'node-2', 'node-4'],
+      status: 'HEALTHY',
+      description: 'Annual Engineering Keynote & Product Demo',
+      contentPreview: '[Binary MP4 stream: ftypmp42 isom / 1080p60 H.264 / AAC 320kbps]',
+    },
+    {
+      objectId: 'obj_003',
+      fileName: 'database-backup.zip',
+      fileSizeMB: 512.0,
+      mimeType: 'application/zip',
+      createdAt: now - 3600000 * 12,
+      updatedAt: now - 3600000 * 12,
+      version: 1,
+      versionsHistory: [
+        {
+          version: 1,
+          checksum: generateChecksum('database-backup.zip', 'v1'),
+          updatedAt: now - 3600000 * 12,
+          sizeMB: 512.0,
+          note: 'Nightly incremental customer ledger dump',
+        },
+      ],
+      checksum: generateChecksum('database-backup.zip', 'v1'),
+      replicationFactor: 3,
+      replicaLocations: ['node-2', 'node-3', 'node-5'],
+      status: 'HEALTHY',
+      description: 'Postgres transactional dump with WAL records',
+      contentPreview: 'PK\x03\x04 - Archive: db_prod_wal_20260925.sql.gz, schema_checksum.sig',
+    },
+    {
+      objectId: 'obj_004',
+      fileName: 'product-image.png',
+      fileSizeMB: 12.8,
+      mimeType: 'image/png',
+      createdAt: now - 3600000 * 18,
+      updatedAt: now - 3600000 * 4,
+      version: 2,
+      versionsHistory: [
+        {
+          version: 1,
+          checksum: generateChecksum('product-image.png', 'v1'),
+          updatedAt: now - 3600000 * 18,
+          sizeMB: 11.2,
+          note: 'Raw render asset',
+        },
+        {
+          version: 2,
+          checksum: generateChecksum('product-image.png', 'v2'),
+          updatedAt: now - 3600000 * 4,
+          sizeMB: 12.8,
+          note: 'Color corrected high-DPI export',
+        },
+      ],
+      checksum: generateChecksum('product-image.png', 'v2'),
+      replicationFactor: 3,
+      replicaLocations: ['node-1', 'node-3', 'node-5'],
+      status: 'HEALTHY',
+      description: 'Ultra-resolution server chassis hero asset',
+      contentPreview: '\x89PNG\r\n\x1a\n [IHDR: 3840x2160 8-bit RGBA sRGB]',
+    },
+    {
+      objectId: 'obj_005',
+      fileName: 'research-data.csv',
+      fileSizeMB: 68.4,
+      mimeType: 'text/csv',
+      createdAt: now - 3600000 * 24,
+      updatedAt: now - 3600000 * 24,
+      version: 1,
+      versionsHistory: [
+        {
+          version: 1,
+          checksum: generateChecksum('research-data.csv', 'v1'),
+          updatedAt: now - 3600000 * 24,
+          sizeMB: 68.4,
+          note: 'Distributed consensus latency matrix 1M rows',
+        },
+      ],
+      checksum: generateChecksum('research-data.csv', 'v1'),
+      replicationFactor: 3,
+      replicaLocations: ['node-1', 'node-3', 'node-4'],
+      status: 'HEALTHY',
+      description: 'Consensus benchmark latency benchmarks (1,000,000 observations)',
+      contentPreview: 'run_id,algorithm,nodes,rtt_ms,p99_latency,quorum_acks\n1,raft,5,1.42,4.8,3\n2,vault_paxos,5,0.94,2.6,3',
+    },
+  ];
+
+  const replicas: ObjectReplica[] = [];
+  for (const obj of objects) {
+    for (const nodeId of obj.replicaLocations) {
+      replicas.push({
+        replicaId: `rep_${obj.objectId}_${nodeId}`,
+        objectId: obj.objectId,
+        nodeId: nodeId,
+        version: obj.version,
+        expectedChecksum: obj.checksum,
+        actualChecksum: obj.checksum,
+        status: 'VERIFIED',
+        lastVerifiedAt: now - 60000 * (Math.floor(Math.random() * 20) + 1),
+        sizeMB: obj.fileSizeMB,
+      });
+    }
+  }
+
+  return { objects, replicas };
+}

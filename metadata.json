@@ -1,0 +1,8 @@
+{
+  "name": "Remix VAULT - Fault-Tolerant Distributed Object Storage",
+  "description": "Fault-tolerant distributed object storage simulator demonstrating automatic failure detection, self-healing replica repair, checksum integrity, and chaos simulation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
